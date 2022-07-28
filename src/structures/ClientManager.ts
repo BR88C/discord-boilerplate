@@ -48,14 +48,6 @@ export class ClientManager extends Client {
      */
     public setErrorCallbacks (supportServer?: string): this {
         this.commandHandler
-            .setChatCommandMiddleware((ctx) => {
-                this.metrics.incrementCommand(ctx.command.name);
-                return true;
-            })
-            .setContextMenuCommandMiddleware((ctx) => {
-                this.metrics.incrementCommand(ctx.command.name);
-                return true;
-            })
             .setError(async (ctx, error, unexpected) => {
                 if (ctx instanceof ChatCommandContext || ctx instanceof ContextMenuCommandContext) {
                     this.metrics.incrementCommandError(ctx.command?.name ?? `Unknown`);
@@ -109,6 +101,10 @@ export class ClientManager extends Client {
         for (const dir of loadInteractions) {
             await this.commandHandler.load(dir);
         }
+
+        this.gateway.on(`INTERACTION_CREATE`, ({ d }) => {
+            if (d.type === InteractionType.ApplicationCommand && (this.client.commandHandler.commands.has(d.data.id)))
+        });
 
         await this.gateway.connect();
         await this.commandHandler.push();

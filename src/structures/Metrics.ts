@@ -2,6 +2,7 @@ import { ClientManager } from './ClientManager';
 
 import { LoggerRawFormats } from '@br88c/node-utils';
 import { InfluxDB, Point } from '@influxdata/influxdb-client';
+import { InteractionType } from 'discord-api-types/v10';
 import { GatewayShardState } from 'distype';
 
 /**
@@ -166,20 +167,16 @@ export class Metrics {
             }
         }
 
+        this.client.gateway.on(`INTERACTION_CREATE`, ({ d }) => {
+            if (d.type === InteractionType.ApplicationCommand && (this.client.commandHandler.commands.has(d.data.id))) {
+                this._commands[d.data.name] ??= 0;
+                this._commands[d.data.name]++;
+            }
+        });
+
         this.client.logger.log(`Initialized metrics controller`, {
             level: `DEBUG`, system: this.system
         });
-    }
-
-    /**
-     * Increment usage for a command.
-     * Used internally.
-     * @param command The command that was used.
-     * @internal
-     */
-    public incrementCommand (command: string): void {
-        this._commands[command] ??= 0;
-        this._commands[command]++;
     }
 
     /**
