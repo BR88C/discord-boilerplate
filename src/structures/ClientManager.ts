@@ -102,10 +102,6 @@ export class ClientManager extends Client {
             await this.commandHandler.load(dir);
         }
 
-        this.gateway.on(`INTERACTION_CREATE`, ({ d }) => {
-            if (d.type === InteractionType.ApplicationCommand && (this.client.commandHandler.commands.has(d.data.id)))
-        });
-
         await this.gateway.connect();
         await this.commandHandler.push();
     }
