@@ -1,0 +1,109 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['typescript']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: CodeQL Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [16]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Node Modules
+        run: npm i --include=dev
+
+      - name: Run Build Test
+        run: npm run build
+
+
+  docs-test:
+    name: Docs Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [16]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Node Modules
+        run: npm i --include=dev
+
+      - name: Run Docs Test
+        run: npm run docs
+
+
+  lint-test:
+    name: Lint Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [16]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Node Modules
+        run: npm i --include=dev
+
+      - name: Run Lint Test
+        run: npm run lint

@@ -1,0 +1,17 @@
+{
+  "include": ["./src/**/*"],
+  "exclude": [],
+  "compilerOptions": {
+    "declaration": true,
+    "esModuleInterop": true,
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "newLine": "lf",
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "outDir": "dist",
+    "strict": true,
+    "target": "ES2022"
+  }
+}

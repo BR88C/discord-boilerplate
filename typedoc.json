@@ -1,0 +1,10 @@
+{
+  "out": "./docs/",
+  "entryPoints": ["src/index.ts"],
+  "readme": "./README.md",
+  "name": "@br88c/distype-boilerplate",
+  "cname": "distypeboilerplate.br88c.dev",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "theme": "default"
+}

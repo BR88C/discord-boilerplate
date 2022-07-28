@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [16]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Node Modules
+        run: npm i --include=dev
+
+      - name: Run Build
+        run: npm run build
+
+      - name: Push Build
+        run: |
+          REPO="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          TARGET_BRANCH="build"
+          git clone $REPO out -b $TARGET_BRANCH
+          rm -rfv out/dist/*
+          rsync -vaI LICENSE out/
+          rsync -vaI package.json out/
+          rsync -vaI README.md out/
+          rsync -vaI dist/ out/dist
+          cd out
+          git add --all .
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_EMAIL}"
+          git commit -m "build: TSC build for ${GITHUB_SHA}" || true
+          git push origin $TARGET_BRANCH
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILD_TOKEN }}
+          GITHUB_ACTOR: BR88C
+          GITHUB_EMAIL: br88c@br88c.dev
