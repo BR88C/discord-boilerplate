@@ -32,13 +32,7 @@ export class ClientManager extends Client {
     constructor (token: string, tokenFilters: TokenFilter[], metricsOptions: MetricsOptions, clientOptions: ClientOptions) {
         const logger = new Logger({
             enabledOutput: { log: [`DEBUG`, `INFO`, `WARN`, `ERROR`] },
-            sanitizeTokens: [
-                {
-                    token,
-                    replacement: `%bot_token%`
-                },
-                ...tokenFilters
-            ]
+            sanitizeTokens: tokenFilters
         });
 
         super(token, clientOptions, logger.log, logger);
