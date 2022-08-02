@@ -198,27 +198,28 @@ export class Metrics {
 
         const usage = process.cpuUsage();
         const time = Date.now();
-
-        const stats = {
-            commands: this._commands,
-            commandErrors: this._commandErrors,
-            cpu: 100 * ((usage.system - this._lastCPUMetrics.usage.system) + (usage.user - this._lastCPUMetrics.usage.user)) / ((time - this._lastCPUMetrics.time) * 1000),
-            memory: process.memoryUsage.rss(),
-            rest: this.client.rest.responseCodeTally,
-            shardCount: this.client.gateway.shards.size,
-            shardGuilds: this.client.gateway.guildCount,
-            shardPing: this.client.gateway.averagePing,
-            shards: this.client.gateway.shards.map((shard) => ({
-                id: shard.id,
-                guilds: shard.guilds.size,
-                ping: shard.ping,
-                state: GatewayShardState[shard.state]
-            }))
-        };
+        const cpu = 100 * ((usage.system - this._lastCPUMetrics.usage.system) + (usage.user - this._lastCPUMetrics.usage.user)) / ((time - this._lastCPUMetrics.time) * 1000);
 
         this._lastCPUMetrics = {
             usage,
             time
+        };
+
+        const stats = {
+            commands: this._commands,
+            commandErrors: this._commandErrors,
+            cpu,
+            memory: process.memoryUsage.rss(),
+            rest: this.client.rest.responseCodeTally,
+            shardCount: this.client.gateway.shards.size,
+            shardGuilds: this.client.gateway.guildCount,
+            shardPing: await this.client.gateway.getAveragePing(),
+            shards: await Promise.all(this.client.gateway.shards.map(async (shard) => ({
+                id: shard.id,
+                guilds: shard.guilds.size,
+                ping: await shard.getPing(),
+                state: GatewayShardState[shard.state]
+            })))
         };
 
         const writeAPI = this.influxClient.getWriteApi(this.options.influxDB.org, this.options.influxDB.bucket);
