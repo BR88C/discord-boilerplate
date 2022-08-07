@@ -35,7 +35,7 @@ class ClientManager extends distype_1.Client {
             sanitizeTokens: tokenFilters
         });
         super(token, clientOptions, logger.log, logger);
-        this.commandHandler = new cmd_1.CommandHandler(this, logger.log, logger);
+        this.commandHandler = new cmd_1.CommandHandler(this);
         this.logger = logger;
         this.metrics = new Metrics_1.Metrics(this, metricsOptions);
     }
