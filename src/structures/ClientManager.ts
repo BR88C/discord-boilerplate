@@ -37,7 +37,7 @@ export class ClientManager extends Client {
 
         super(token, clientOptions, logger.log, logger);
 
-        this.commandHandler = new CommandHandler(this, logger.log, logger);
+        this.commandHandler = new CommandHandler(this);
         this.logger = logger;
         this.metrics = new Metrics(this, metricsOptions);
     }
