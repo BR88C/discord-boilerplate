@@ -1,6 +1,6 @@
 {
   "name": "@br88c/distype-boilerplate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Boilerplate code for making bots using Distype.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
