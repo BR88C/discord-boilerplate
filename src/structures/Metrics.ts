@@ -217,7 +217,7 @@ export class Metrics {
             shards: await Promise.all(this.client.gateway.shards.map(async (shard) => ({
                 id: shard.id,
                 guilds: shard.guilds.size,
-                ping: await shard.getPing(),
+                ping: shard.state >= GatewayShardState.READY ? await shard.getPing() : 0,
                 state: GatewayShardState[shard.state]
             })))
         };
