@@ -158,7 +158,7 @@ class Metrics {
                 .intField(`count`, count));
         });
         const commandErrorPoints = [];
-        Object.entries(stats.commands).forEach(([command, count]) => {
+        Object.entries(stats.commandErrors).forEach(([command, count]) => {
             commandErrorPoints.push(new influxdb_client_1.Point(`commandError`)
                 .tag(`name`, command)
                 .intField(`count`, count));
