@@ -245,7 +245,7 @@ export class Metrics {
         });
 
         const commandErrorPoints: Point[] = [];
-        Object.entries(stats.commands).forEach(([command, count]) => {
+        Object.entries(stats.commandErrors).forEach(([command, count]) => {
             commandErrorPoints.push(
                 new Point(`commandError`)
                     .tag(`name`, command)
