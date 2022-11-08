@@ -2,7 +2,6 @@ import { ClientManager } from './ClientManager';
 
 import { LoggerRawFormats } from '@br88c/node-utils';
 import { InfluxDB, Point } from '@influxdata/influxdb-client';
-import { InteractionType } from 'discord-api-types/v10';
 import { GatewayShardState } from 'distype';
 
 /**
@@ -94,14 +93,6 @@ export class Metrics {
     public readonly system = `Metrics`;
 
     /**
-     * Command usage.
-     */
-    private _commands: Record<string, number> = {};
-    /**
-     * Command error occurrences.
-     */
-    private _commandErrors: Record<string, number> = {};
-    /**
      * The callback to use to fetch extra points when reporting metrics to InfluxDB.
      */
     private _influxDBCallback: (() => Point[] | Promise<Point[]>) | null = null;
@@ -167,27 +158,9 @@ export class Metrics {
             }
         }
 
-        this.client.gateway.on(`INTERACTION_CREATE`, ({ d }) => {
-            if (d.type === InteractionType.ApplicationCommand && (this.client.commandHandler.commands.has(d.data.id))) {
-                this._commands[d.data.name] ??= 0;
-                this._commands[d.data.name]++;
-            }
-        });
-
         this.client.logger.log(`Initialized metrics controller`, {
             level: `DEBUG`, system: this.system
         });
-    }
-
-    /**
-     * Increment error occurrences for a command.
-     * Used internally.
-     * @param command The command that encountered an error.
-     * @internal
-     */
-    public incrementCommandError (command: string): void {
-        this._commandErrors[command] ??= 0;
-        this._commandErrors[command]++;
     }
 
     /**
@@ -206,11 +179,8 @@ export class Metrics {
         };
 
         const stats = {
-            commands: this._commands,
-            commandErrors: this._commandErrors,
             cpu,
             memory: process.memoryUsage.rss(),
-            rest: this.client.rest.responseCodeTally,
             shardCount: this.client.gateway.shards.size,
             shardGuilds: this.client.gateway.guildCount,
             shardPing: await this.client.gateway.getAveragePing(),
@@ -235,33 +205,6 @@ export class Metrics {
             .intField(`guilds`, stats.shardGuilds)
             .floatField(`ping`, stats.shardPing);
 
-        const commandPoints: Point[] = [];
-        Object.entries(stats.commands).forEach(([command, count]) => {
-            commandPoints.push(
-                new Point(`command`)
-                    .tag(`name`, command)
-                    .intField(`count`, count)
-            );
-        });
-
-        const commandErrorPoints: Point[] = [];
-        Object.entries(stats.commandErrors).forEach(([command, count]) => {
-            commandErrorPoints.push(
-                new Point(`commandError`)
-                    .tag(`name`, command)
-                    .intField(`count`, count)
-            );
-        });
-
-        const restPoints: Point[] = [];
-        Object.entries(stats.rest).forEach(([code, count]) => {
-            restPoints.push(
-                new Point(`rest`)
-                    .tag(`code`, code)
-                    .intField(`count`, count)
-            );
-        });
-
         const shardPoints: Point[] = [];
         stats.shards.forEach((shard) => {
             shardPoints.push(
@@ -275,7 +218,7 @@ export class Metrics {
 
         const extraPoints = (await this._influxDBCallback?.()) ?? [];
 
-        const points = [processPoint, ...commandPoints, ...commandErrorPoints, ...restPoints, ...shardPoints, ...extraPoints];
+        const points = [processPoint, ...shardPoints, ...extraPoints];
         writeAPI.writePoints(points);
 
         await writeAPI.close();
@@ -290,8 +233,9 @@ export class Metrics {
      */
     public async reportTopggMetrics (): Promise<void> {
         if (!this.options.topgg) throw new Error(`Cannot post to Top.gg; options not defined`);
+        if (!this.client.gateway.user?.id) throw new Error(`Cannot post to Top.gg: application ID is undefined (client.gateway.user.id)`);
 
-        await this.client.topggRequest(`POST`, `/bots/stats`, { body: {
+        await this.client.topggRequest(`POST`, `/bots/${this.client.gateway.user.id}/stats`, { body: {
             server_count: this.client.gateway.guildCount,
             shard_count: this.options.topgg.postShards ? this.client.gateway.shards.size : undefined
         } }, this.options.topgg.token);

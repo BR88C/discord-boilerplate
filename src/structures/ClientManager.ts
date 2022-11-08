@@ -1,8 +1,7 @@
 import { Metrics, MetricsOptions } from './Metrics';
 
 import { Logger, LoggerRawFormats, sanitizeTokens, TokenFilter } from '@br88c/node-utils';
-import { ChatCommandContext, CommandHandler, ContextMenuCommandContext, DiscordColors, Embed } from '@distype/cmd';
-import { ComponentType } from 'discord-api-types/v10';
+import { CommandHandler, DiscordColors, Embed } from '@distype/cmd';
 import { Client, ClientOptions, RestMethod, RestRequestData, RestRoute } from 'distype';
 
 /**
@@ -48,20 +47,14 @@ export class ClientManager extends Client {
      */
     public setErrorCallbacks (supportServer?: string): this {
         this.commandHandler
-            .setError(async (ctx, error, unexpected) => {
-                if (ctx instanceof ChatCommandContext || ctx instanceof ContextMenuCommandContext) {
-                    this.metrics.incrementCommandError(ctx.command?.name ?? `Unknown`);
-                }
-
+            .setError(async (ctx, error) => {
                 const errorId = `${Math.round(Math.random() * 1e6).toString(36).padStart(5, `0`)}${Date.now().toString(36)}`.toUpperCase();
 
-                this.logger.log(`${unexpected ? `Unexpected ` : ``}${error.name} (ID: ${errorId}) when running interaction ${ctx.interaction.id}: ${error.message}`, {
+                this.logger.log(`${error.name} (ID: ${errorId}) when running interaction ${ctx.interaction.id}: ${error.message}`, {
                     level: `ERROR`, system: `Command Handler`
                 });
 
-                if (unexpected) {
-                    console.error(`\n${LoggerRawFormats.RED}${error.stack}${LoggerRawFormats.RESET}\n`);
-                }
+                console.error(`\n${LoggerRawFormats.RED}${error.stack}${LoggerRawFormats.RESET}\n`);
 
                 const tokenFilter = [
                     ...[(this.logger.options.sanitizeTokens as TokenFilter | TokenFilter[])].flat(),
@@ -79,15 +72,6 @@ export class ClientManager extends Client {
                         .setFooter(`Error ID: ${errorId}`)
                         .setTimestamp()
                 );
-            })
-            .setExpireError((ctx, error, unexpected) => {
-                this.logger.log(`${unexpected ? `Unexpected ` : ``}${error.name} when running expire callback for component "${ctx.component.customId}" (${ComponentType[ctx.component.type]})`, {
-                    level: `ERROR`, system: `Command Handler`
-                });
-
-                if (unexpected) {
-                    console.error(`\n${LoggerRawFormats.RED}${error.stack}${LoggerRawFormats.RESET}\n`);
-                }
             });
 
         return this;
@@ -98,12 +82,11 @@ export class ClientManager extends Client {
      * @param loadInteractions Interaction directories to load.
      */
     public async init (...loadInteractions: string[]): Promise<void> {
-        for (const dir of loadInteractions) {
-            await this.commandHandler.load(dir);
-        }
-
         await this.gateway.connect();
-        await this.commandHandler.push();
+
+        for (const dir of loadInteractions) {
+            await this.commandHandler.loadDirectories(dir);
+        }
     }
 
     /**
