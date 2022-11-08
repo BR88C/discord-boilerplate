@@ -86,14 +86,6 @@ export declare class Metrics {
      */
     readonly system = "Metrics";
     /**
-     * Command usage.
-     */
-    private _commands;
-    /**
-     * Command error occurrences.
-     */
-    private _commandErrors;
-    /**
      * The callback to use to fetch extra points when reporting metrics to InfluxDB.
      */
     private _influxDBCallback;
@@ -106,13 +98,6 @@ export declare class Metrics {
      * @param client The client to bind to.
      */
     constructor(client: ClientManager, options: MetricsOptions);
-    /**
-     * Increment error occurrences for a command.
-     * Used internally.
-     * @param command The command that encountered an error.
-     * @internal
-     */
-    incrementCommandError(command: string): void;
     /**
      * Reports metrics to InfluxDB.
      */

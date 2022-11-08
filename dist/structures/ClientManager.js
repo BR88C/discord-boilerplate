@@ -4,7 +4,6 @@ exports.ClientManager = void 0;
 const Metrics_1 = require("./Metrics");
 const node_utils_1 = require("@br88c/node-utils");
 const cmd_1 = require("@distype/cmd");
-const v10_1 = require("discord-api-types/v10");
 const distype_1 = require("distype");
 /**
  * The client manager.
@@ -45,17 +44,12 @@ class ClientManager extends distype_1.Client {
      */
     setErrorCallbacks(supportServer) {
         this.commandHandler
-            .setError(async (ctx, error, unexpected) => {
-            if (ctx instanceof cmd_1.ChatCommandContext || ctx instanceof cmd_1.ContextMenuCommandContext) {
-                this.metrics.incrementCommandError(ctx.command?.name ?? `Unknown`);
-            }
+            .setError(async (ctx, error) => {
             const errorId = `${Math.round(Math.random() * 1e6).toString(36).padStart(5, `0`)}${Date.now().toString(36)}`.toUpperCase();
-            this.logger.log(`${unexpected ? `Unexpected ` : ``}${error.name} (ID: ${errorId}) when running interaction ${ctx.interaction.id}: ${error.message}`, {
+            this.logger.log(`${error.name} (ID: ${errorId}) when running interaction ${ctx.interaction.id}: ${error.message}`, {
                 level: `ERROR`, system: `Command Handler`
             });
-            if (unexpected) {
-                console.error(`\n${node_utils_1.LoggerRawFormats.RED}${error.stack}${node_utils_1.LoggerRawFormats.RESET}\n`);
-            }
+            console.error(`\n${node_utils_1.LoggerRawFormats.RED}${error.stack}${node_utils_1.LoggerRawFormats.RESET}\n`);
             const tokenFilter = [
                 ...[this.logger.options.sanitizeTokens].flat(),
                 {
@@ -69,14 +63,6 @@ class ClientManager extends distype_1.Client {
                 .setDescription(`\`\`\`\n${(0, node_utils_1.sanitizeTokens)(error.message, tokenFilter)}\n\`\`\`${supportServer ? `\n*Support Server: ${supportServer}*` : ``}`)
                 .setFooter(`Error ID: ${errorId}`)
                 .setTimestamp());
-        })
-            .setExpireError((ctx, error, unexpected) => {
-            this.logger.log(`${unexpected ? `Unexpected ` : ``}${error.name} when running expire callback for component "${ctx.component.customId}" (${v10_1.ComponentType[ctx.component.type]})`, {
-                level: `ERROR`, system: `Command Handler`
-            });
-            if (unexpected) {
-                console.error(`\n${node_utils_1.LoggerRawFormats.RED}${error.stack}${node_utils_1.LoggerRawFormats.RESET}\n`);
-            }
         });
         return this;
     }
@@ -85,11 +71,10 @@ class ClientManager extends distype_1.Client {
      * @param loadInteractions Interaction directories to load.
      */
     async init(...loadInteractions) {
-        for (const dir of loadInteractions) {
-            await this.commandHandler.load(dir);
-        }
         await this.gateway.connect();
-        await this.commandHandler.push();
+        for (const dir of loadInteractions) {
+            await this.commandHandler.loadDirectories(dir);
+        }
     }
     /**
      * Makes a Top.gg API request.
