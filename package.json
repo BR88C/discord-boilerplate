@@ -1,6 +1,6 @@
 {
   "name": "@br88c/distype-boilerplate",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Boilerplate code for making bots using Distype.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,17 +26,17 @@
   },
   "dependencies": {
     "@br88c/node-utils": "^1.4.0",
-    "@distype/cmd": "^0.10.0",
+    "@distype/cmd": "^0.10.1",
     "@influxdata/influxdb-client": "^1.32.0",
-    "discord-api-types": "^0.37.16",
-    "distype": "^1.2.0"
+    "discord-api-types": "^0.37.17",
+    "distype": "^1.2.1"
   },
   "devDependencies": {
     "@br88c/eslint-config": "^1.6.0",
     "@types/node": "^16.18.3",
-    "eslint": "^8.26.0",
+    "eslint": "^8.27.0",
     "rimraf": "^3.0.2",
-    "typedoc": "^0.23.19",
+    "typedoc": "^0.23.20",
     "typescript": "^4.8.4"
   },
   "engines": {
